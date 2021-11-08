@@ -9,6 +9,7 @@ public class World {
     private static final Random random = new Random();
     private static final int WIDTH = 20, HEIGHT = 30;
 
+
         public static void main(String[] args) {
             System.out.println("Start");
             Simulation.simulateDay();
@@ -20,6 +21,7 @@ public class World {
  //        for (int i = 0; i < 10; i++) {
  //           animal.move(MapDirection.values()[random.nextInt(MapDirection.values().length)], WIDTH, HEIGHT);
         }
+
 
     private static void run(String[] args) {
         for (String arg : args) {
