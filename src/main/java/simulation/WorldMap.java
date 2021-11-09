@@ -16,6 +16,32 @@ public class WorldMap extends AbstractWorldMap {
         {
             animals.add(new Animal((getRandomPosition())));
         }
+        for (int i = 0; i < PLANTS_NUMBER; i++ )
+        {
+            placePlantOnMap();
+        }
+    }
+
+    private  void  placePlantOnMap()
+    {
+        Vector2D position = getRandomPosition();
+        while (isOccupiedByPlant(position)) position = getRandomPosition();
+        plants.add(new Plant(position));
+    }
+
+    private  boolean isOccupiedByPlant(Vector2D position)
+    {
+      return  getPlantAtPosition(position) != null;
+    }
+
+    private  Plant getPlantAtPosition(Vector2D position)
+    {
+        for (Plant plant : plants)
+        {
+            if (plant.gotPosition().equals(position)) return plant;
+        }
+
+        return null;
     }
 
     private  Vector2D getRandomPosition()
@@ -29,4 +55,19 @@ public class WorldMap extends AbstractWorldMap {
             animal.move(MapDirection.values()[this.random.nextInt(MapDirection.values().length)], width, height);
         }
     }
+
+    public void eat()
+    {
+        for (Animal animal : animals)
+        {
+            Plant plant = getPlantAtPosition(animal.getPosition());
+            if (plant != null)
+            {
+                plants.remove(plant);
+                placePlantOnMap();
+            }
+        }
+    }
+
+
 }
