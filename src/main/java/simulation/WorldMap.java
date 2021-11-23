@@ -1,13 +1,16 @@
 package simulation;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class WorldMap extends AbstractWorldMap {
     private static final int ANIMALS_NO = 15, PLANTS_NUMBER = 100;
-    private static final int INITIAL_ENERGY = 22;
+    private static final int ANIMAL_ENERGY = 22;
+    private static final int PLANT_ENERGY = 10;
     private Map <Vector2D, List<Animal>> animalsPosition = new HashMap<>();
-    private ArrayList<Animal> animals = new ArrayList<>();
+    private List<Animal> animals = new ArrayList<>();
     private Map <Vector2D, Plant > plants = new HashMap<>();
+    private  int dayNumber = 1;
     private Random random;
 
     public WorldMap(int width, int height) {
@@ -15,9 +18,7 @@ public class WorldMap extends AbstractWorldMap {
         this.random = new Random();
         for (int i = 0; i < ANIMALS_NO; i++)
         {
-            Animal animal = new Animal(getRandomPosition(), INITIAL_ENERGY);
-            animals.add(animal);
-            placePlantOnMap();
+           addNewAnimal(new Animal(getRandomPosition(), ANIMAL_ENERGY));
         }
         for (int i = 0; i < PLANTS_NUMBER; i++ )
         {
@@ -53,25 +54,71 @@ public class WorldMap extends AbstractWorldMap {
 
     @Override
     public void run() {
+        System.out.println("Today is day number " + dayNumber);
         animalsPosition.clear();
-        for (Animal animal : animals) {
+        animals.forEach(animal -> {
             animal.move(MapDirection.values()[this.random.nextInt(MapDirection.values().length)], width, height);
             placeAnimalOnMap(animal);
-        }
+        });
     }
 
     public void eat()
     {
-        for (Animal animal : animals)
+        animalsPosition.forEach((position, animals) ->
         {
-            if (isOccupiedByPlant(animal.getPosition()))
+            if (isOccupiedByPlant(position))
             {
-                System.out.println("Animal ate plant at position " + animal.getPosition());
-                plants.remove(animal.getPosition());
-                placePlantOnMap();
+                animals.stream().max(Animal::compareTo).ifPresent(this::eatPlant);
             }
-        }
+        });
+
     }
 
+    private  void eatPlant(Animal animal)
+    {
+        System.out.println("Animal ate plant at position " + animal.getPosition());
+        animal.setEnergy(animal.getEnergy() + ANIMAL_ENERGY);
+        plants.remove(animal.getPosition());
+        placePlantOnMap();
+    }
 
+    @Override
+    public void atTheEndOfDay()
+    {
+        dayNumber++;
+        animals = animals.stream()
+                .map(animal -> animal.ageing())
+                .map(animal -> animal.setEnergy(animal.getEnergy() - ANIMAL_ENERGY / 2))
+                .filter(animal -> animal.getEnergy() > 0)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void reproduce()
+    {
+        List<Animal> children = new LinkedList<>();
+        animalsPosition.forEach((position, animals) -> {
+            List<Animal> parents = animals.stream()
+                    .filter(a -> a.getEnergy() > ANIMAL_ENERGY / 2)
+                    .sorted(Collections.reverseOrder())
+                    .limit(2)
+                    .collect(Collectors.toList());
+                if (parents.size() == 2)
+                {
+                    Animal child = new Animal(parents.get(0), parents.get(1));
+                    System.out.println("Animal " + child.getAnimalID() + " was born on position " + position );
+                    children.add(child);
+                }
+
+        }) ;
+
+       children.forEach(this::addNewAnimal);
+
+    }
+
+    private void addNewAnimal(Animal animal)
+    {
+        animals.add(animal);
+        placeAnimalOnMap(animal);
+    }
 }

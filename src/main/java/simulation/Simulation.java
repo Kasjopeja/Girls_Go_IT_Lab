@@ -14,5 +14,8 @@ public class Simulation {
 
     public static void simulateDay() {
         worldMap.run();
+        worldMap.atTheEndOfDay();
+        worldMap.eat();
+        worldMap.reproduce();
     }
 }
